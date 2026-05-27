@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>소소한 책읽기 - 지원 신청 및 관리 시스템</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&family=Sans-serif&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif KR', serif;
+        }
+        /* Custom scrollbar for tables */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #FAF6F0;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #DCD3C9;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #8C6239;
+        }
+    </style>
+</head>
+<body class="bg-[#FAF6F0] text-[#3E3431] min-h-screen flex flex-col justify-between">
+
+    <!-- Header Section -->
+    <header class="py-6 px-4 border-b border-[#E8DFD8] bg-white/70 backdrop-blur-md sticky top-0 z-30 shadow-sm">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl text-[#8C6239]"><i class="fa-solid fa-book-open-reader"></i></span>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[#5C4033]">소소한 책읽기</h1>
+                    <p class="text-[11px] text-[#8C7A6B] mt-0.5">서로 질문을 만들고 대화하며 함께 성장하는 모임</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <div class="flex bg-[#F3ECE0] p-1 rounded-xl border border-[#E8DFD8]">
+                <button id="tabStudent" class="px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 bg-[#8C6239] text-white shadow-sm">
+                    <i class="fa-solid fa-user-pen"></i> 학생 신청하기
+                </button>
+                <button id="tabTeacher" class="px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 text-[#6E5D53] hover:text-[#5C4033]">
+                    <i class="fa-solid fa-graduation-cap"></i> 선생님 페이지
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-8">
+        
+        <!-- Connection Warning Alert (Will be hidden on successful connection) -->
+        <div id="connWarning" class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl mb-6 text-xs flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm animate-pulse"></i>
+            <span>현재 실시간 데이터베이스 연결 대기 중입니다. 아래의 스크립트 설정에 본인의 Firebase 정보를 복사/붙여넣기 하시면 이 경고가 즉시 사라집니다.</span>
+        </div>
+
+        <!-- SECTION 1: Student Application View -->
+        <div id="studentView" class="space-y-6">
+            <!-- Intro Banner -->
+            <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-[#E8DFD8] relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 text-[120px] text-[#F3ECE0] -z-0 pointer-events-none">
+                    <i class="fa-solid fa-feather-pointed"></i>
+                </div>
+                <div class="relative z-10">
+                    <h2 class="text-lg md:text-xl font-bold text-[#5C4033] mb-2">모임 소개 및 신청 안내</h2>
+                    <p class="text-xs md:text-sm text-[#6E5D53] leading-relaxed mb-4">
+                        <strong>'소소한 책읽기'</strong>는 책 한 권을 정하여 구성원들이 번갈아 질문을 던지고, 
+                        그 질문에 대해 마음을 나누며 대화하는 자율 독서 동아리입니다. 
+                        본 모임은 <strong>조(모둠) 단위</strong>로 신청을 받습니다. 조원들의 정보를 꼼꼼히 작성해 주세요!
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 text-xs text-[#7A6B61] border-t border-[#F3ECE0] pt-4">
+                        <div class="flex items-start gap-2">
+                            <span class="text-[#8C6239] mt-0.5"><i class="fa-solid fa-circle-info"></i></span>
+                            <p>중복 신청은 불가합니다. (학번 5자리 기준으로 중복 검증 수행)</p>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-[#8C6239] mt-0.5"><i class="fa-solid fa-file-spreadsheet"></i></span>
+                            <p>신청 완료 후 데이터는 안전하게 보관되며, 담당자 시트로 자동 정리됩니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Form -->
+            <div class="bg-white rounded-2xl shadow-md border border-[#E8DFD8] overflow-hidden">
+                <div class="bg-[#8C6239] text-white py-4 px-6 md:px-8">
+                    <h3 class="text-base font-semibold flex items-center gap-2">
+                        <i class="fa-regular fa-clipboard"></i> 지원 신청서 작성하기
+                    </h3>
+                </div>
+
+                <form id="applicationForm" class="p-6 md:p-8 space-y-6">
+                    <!-- Group Info Section -->
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-bold text-[#8C6239] border-b border-[#F3ECE0] pb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-users"></i> 1. 조(모둠) 정보 입력
+                        </h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="groupName" class="block text-xs font-semibold text-[#5C4033] mb-1.5">조 이름 <span class="text-red-500">*</span></label>
+                                <input type="text" id="groupName" required 
+                                    class="w-full px-4 py-2.5 rounded-lg border border-[#DCD3C9] focus:outline-none focus:ring-2 focus:ring-[#8C6239] focus:border-[#8C6239] bg-[#FAF8F5] text-xs transition"
+                                    placeholder="예: 북적북적, 책갈피">
+                            </div>
+                            <div>
+                                <label for="leaderName" class="block text-xs font-semibold text-[#5C4033] mb-1.5">조장 이름 <span class="text-red-500">*</span></label>
+                                <input type="text" id="leaderName" required 
+                                    class="w-full px-4 py-2.5 rounded-lg border border-[#DCD3C9] focus:outline-none focus:ring-2 focus:ring-[#8C6239] focus:border-[#8C6239] bg-[#FAF8F5] text-xs transition"
+                                    placeholder="조장의 이름을 입력해 주세요">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Individual Info Section -->
+                    <div class="space-y-4 pt-2">
+                        <h4 class="text-xs font-bold text-[#8C6239] border-b border-[#F3ECE0] pb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-user"></i> 2. 신청자 개인 정보 입력
+                        </h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="studentId" class="block text-xs font-semibold text-[#5C4033] mb-1.5">
+                                    학번 (5자리) <span class="text-red-500">*</span> 
+                                    <span class="text-[10px] text-gray-400 font-normal">(중복 확인 기준)</span>
+                                </label>
+                                <input type="text" id="studentId" required 
+                                    pattern="[0-9]{5}" 
+                                    inputmode="numeric"
+                                    maxlength="5"
+                                    class="w-full px-4 py-2.5 rounded-lg border border-[#DCD3C9] focus:outline-none focus:ring-2 focus:ring-[#8C6239] focus:border-[#8C6239] bg-[#FAF8F5] text-xs font-mono transition"
+                                    placeholder="예: 10101">
+                            </div>
+                            <div>
+                                <label for="applicantName" class="block text-xs font-semibold text-[#5C4033] mb-1.5">이름 <span class="text-red-500">*</span></label>
+                                <input type="text" id="applicantName" required 
+                                    class="w-full px-4 py-2.5 rounded-lg border border-[#DCD3C9] focus:outline-none focus:ring-2 focus:ring-[#8C6239] focus:border-[#8C6239] bg-[#FAF8F5] text-xs transition"
+                                    placeholder="이름을 입력해 주세요">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label for="phoneNumber" class="block text-xs font-semibold text-[#5C4033] mb-1.5">연락처 <span class="text-red-500">*</span></label>
+                                <input type="tel" id="phoneNumber" required 
+                                    class="w-full px-4 py-2.5 rounded-lg border border-[#DCD3C9] focus:outline-none focus:ring-2 focus:ring-[#8C6239] focus:border-[#8C6239] bg-[#FAF8F5] text-xs transition"
+                                    placeholder="예: 010-1234-5678" pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}|[0-9]{10,11}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Book Choice Section -->
+                    <div class="space-y-4 pt-2">
+                        <h4 class="text-xs font-bold text-[#8C6239] border-b border-[#F3ECE0] pb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-book"></i> 3. 읽고 싶은 도서 정보
+                        </h4>
+                        <div>
+                            <label for="bookTitle" class="block text-xs font-semibold text-[#5C4033] mb-1.5">희망 도서명 <span class="text-red-500">*</span></label>
+                            <input type="text" id="bookTitle" required 
+                                class="w-full px-4 py-2.5 rounded-lg border border-[#DCD3C9] focus:outline-none focus:ring-2 focus:ring-[#8C6239] focus:border-[#8C6239] bg-[#FAF8F5] text-xs transition"
+                                placeholder="같이 읽고 싶은 책 제목을 입력해 주세요">
+                        </div>
+                        <div>
+                            <label for="reason" class="block text-xs font-semibold text-[#5C4033] mb-1.5">선정 도서 추천 이유 (선택)</label>
+                            <textarea id="reason" rows="3" 
+                                class="w-full px-4 py-2.5 rounded-lg border border-[#DCD3C9] focus:outline-none focus:ring-2 focus:ring-[#8C6239] focus:border-[#8C6239] bg-[#FAF8F5] text-xs transition resize-none"
+                                placeholder="이 책을 함께 고르고 읽고 싶은 이유를 자유롭게 적어주세요"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Terms and Agreement -->
+                    <div class="p-4 bg-[#FAF8F5] rounded-xl border border-[#F3ECE0] text-xs text-[#7A6B61]">
+                        <label class="flex items-start gap-2.5 cursor-pointer">
+                            <input type="checkbox" id="agreeTerms" required class="mt-0.5 accent-[#8C6239]">
+                            <span>[필수] 개인정보 수집 및 이용 동의: 수집하는 개인정보(학번, 이름, 연락처, 책 선호도)는 '소소한 책읽기' 모둠 매칭 및 동아리 관리 목적으로만 사용되며, 활동 종료 후 즉시 파기됩니다.</span>
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-2">
+                        <button type="submit" id="submitBtn"
+                            class="w-full py-3 px-6 bg-[#8C6239] hover:bg-[#704E2D] active:scale-[0.99] text-white font-semibold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm">
+                            <i class="fa-solid fa-paper-plane"></i> 신청서 제출하기
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- SECTION 2: Teacher Portal View -->
+        <div id="teacherView" class="space-y-6 hidden">
+            
+            <!-- A. Teacher Login Gate -->
+            <div id="loginGate" class="max-w-md mx-auto bg-white rounded-2xl shadow-md border border-[#E8DFD8] p-6 md:p-8 text-center space-y-6">
+                <div class="w-16 h-16 bg-[#F3ECE0] text-[#8C6239] rounded-full flex items-center justify-center mx-auto text-2xl">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-[#5C4033]">선생님인증이 필요합니다</h3>
+                    <p class="text-xs text-[#8C7A6B] mt-1">동아리 관리 비밀번호를 입력해 주세요.</p>
+                </div>
+                <div class="space-y-3">
+                    <input type="password" id="adminPassword" 
+                        class="w-full px-4 py-2.5 rounded-lg border border-[#DCD3C9] focus:outline-none focus:ring-2 focus:ring-[#8C6239] text-center text-sm font-sans tracking-widest"
+                        placeholder="••••••••">
+                    <p class="text-[10px] text-gray-400">※ 기본 비밀번호는 <code class="bg-gray-100 px-1 rounded">admin1234</code> 입니다.</p>
+                </div>
+                <button id="loginBtn" class="w-full py-2.5 bg-[#8C6239] hover:bg-[#704E2D] text-white text-xs font-semibold rounded-lg transition-colors shadow-sm">
+                    인증 및 현황 조회
+                </button>
+            </div>
+
+            <!-- B. Teacher Admin Dashboard (Hidden until authorized) -->
+            <div id="adminDashboard" class="space-y-6 hidden">
+                <!-- Summary Stats Widgets -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-[#E8DFD8] shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-[11px] text-[#8C7A6B] font-semibold">총 신청 학생</p>
+                            <h4 id="statTotalStudents" class="text-2xl font-bold text-[#5C4033] mt-1">0명</h4>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-[#8C6239] flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-[#E8DFD8] shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-[11px] text-[#8C7A6B] font-semibold">참여 모둠(조) 수</p>
+                            <h4 id="statTotalGroups" class="text-2xl font-bold text-[#5C4033] mt-1">0개</h4>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-people-roof"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-[#E8DFD8] shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-[11px] text-[#8C7A6B] font-semibold">관리자 세션 상태</p>
+                            <span class="inline-block mt-1 bg-amber-100 text-[#8C6239] text-[10px] px-2 py-1 rounded-full font-bold">인증됨</span>
+                        </div>
+                        <button id="logoutBtn" class="px-2.5 py-1.5 border border-[#DCD3C9] hover:bg-gray-50 text-gray-500 rounded-lg text-[10px] flex items-center gap-1 transition">
+                            <i class="fa-solid fa-right-from-bracket"></i> 로그아웃
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Controls & Table Card -->
+                <div class="bg-white rounded-2xl shadow-md border border-[#E8DFD8] overflow-hidden">
+                    <div class="p-6 border-b border-[#F3ECE0] flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+                        <div>
+                            <h3 class="text-base font-bold text-[#5C4033] flex items-center gap-2">
+                                <i class="fa-solid fa-clipboard-list text-[#8C6239]"></i> 실시간 신청자 관리 대장
+                            </h3>
+                            <p class="text-[11px] text-[#8C7A6B] mt-0.5">신청 현황 확인, 삭제 및 엑셀 다운로드가 가능합니다.</p>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- Search Bar -->
+                            <div class="relative flex-grow sm:flex-grow-0">
+                                <span class="absolute left-3 top-2.5 text-[#8C7A6B] text-xs"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                <input type="text" id="tableSearch" 
+                                    class="w-full sm:w-48 pl-8 pr-3 py-1.5 rounded-lg border border-[#DCD3C9] text-xs focus:outline-none focus:ring-2 focus:ring-[#8C6239]"
+                                    placeholder="학번, 이름, 조 검색...">
+                            </div>
+                            <!-- Refresh Button -->
+                            <button id="refreshBtn" class="px-3 py-1.5 bg-[#FAF8F5] border border-[#DCD3C9] hover:bg-[#F3ECE0] text-[#5C4033] text-xs font-semibold rounded-lg flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-arrows-rotate"></i> 새로고침
+                            </button>
+                            <!-- Export Button -->
+                            <button id="exportBtn" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition shadow-sm">
+                                <i class="fa-solid fa-file-excel"></i> 엑셀 파일 저장
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scrollable Table -->
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-[#FAF8F5] border-b border-[#E8DFD8] text-[#5C4033] font-bold">
+                                    <th class="p-4">학번</th>
+                                    <th class="p-4">이름</th>
+                                    <th class="p-4">연락처</th>
+                                    <th class="p-4">조 이름</th>
+                                    <th class="p-4">조장 이름</th>
+                                    <th class="p-4">읽고 싶은 책</th>
+                                    <th class="p-4">신청 시간</th>
+                                    <th class="p-4 text-center">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="applicationTableBody" class="divide-y divide-[#F3ECE0] text-gray-700">
+                                <!-- Dynamic Rows -->
+                                <tr>
+                                    <td colspan="8" class="p-8 text-center text-gray-400">
+                                        <i class="fa-solid fa-spinner animate-spin text-[#8C6239] text-xl mb-2 block"></i>
+                                        데이터를 불러오는 중입니다...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="py-6 px-4 bg-[#3E3431] text-[#C1B5A9] text-center text-[11px] border-t border-[#4E433E] z-10">
+        <div class="max-w-4xl mx-auto space-y-2">
+            <p>© 2026 소소한 책읽기 모임. All rights reserved.</p>
+            <p>질문이 있으신가요? 조장 또는 동아리 담당자에게 문의해 주세요.</p>
+        </div>
+    </footer>
+
+    <!-- Custom Modal for Alert and Feedback -->
+    <div id="customModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden px-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl border border-[#E8DFD8] scale-95 transform transition-all duration-300">
+            <div id="modalIconContainer" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                <!-- Icon will be dynamically added -->
+            </div>
+            <h4 id="modalTitle" class="text-base font-bold text-[#5C4033] mb-2">알림</h4>
+            <p id="modalMessage" class="text-xs text-[#7A6B61] leading-relaxed mb-6 whitespace-pre-line"></p>
+            <button id="modalCloseBtn" class="w-full py-2 bg-[#8C6239] text-white text-xs font-semibold rounded-xl hover:bg-[#704E2D] transition-colors">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase Scripts Setup -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ---------------------------------------------------------
+        // ★ 중요: 본인의 파이어베이스 설정을 아래에 붙여넣어 주세요! ★
+        // 파이어베이스 콘솔 웹 앱 등록 단계에서 나타난 값을 아래 중괄호 { } 안에 입력합니다.
+        // ---------------------------------------------------------
+        const myCustomConfig = {
+            apiKey: "AIzaSyBZV-n6tSXDqJqRVR80LrCbbuzfw_6WJ5Q",
+            authDomain: "pnuhs-book.firebaseapp.com",
+            projectId: "pnuhs-book",
+            storageBucket: "pnuhs-book.firebasestorage.app",
+            messagingSenderId: "599732467692",
+            appId: "1:599732467692:web:4aa5e10b12039da72132c9",
+            measurementId: "G-DZ5QCN8BWY"
+        };
+
+        // Firebase 설정 정합성 확인 후 초기화
+        let firebaseConfig;
+        let isCustomProject = false;
+        
+        if (myCustomConfig.apiKey && myCustomConfig.apiKey !== "본인의_API_KEY_값") {
+            // 본인 파이어베이스 설정이 입력된 경우 최우선 적용
+            firebaseConfig = myCustomConfig;
+            isCustomProject = true;
+        } else {
+            // 시스템 기본 인젝트 환경 시도
+            try {
+                if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                    firebaseConfig = JSON.parse(__firebase_config);
+                } else {
+                    throw new Error("환경 변수 인젝트 실패");
+                }
+            } catch (e) {
+                // 최종 로컬 테스트용 모의 객체
+                firebaseConfig = {
+                    apiKey: "",
+                    authDomain: "dummy-domain.firebaseapp.com",
+                    projectId: "dummy-project",
+                    storageBucket: "dummy-bucket.appspot.com",
+                    messagingSenderId: "123456",
+                    appId: "1:123456:web:123"
+                };
+            }
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'soso-bookclub-id';
+
+        // State variables
+        let currentUser = null;
+        let isTeacherAuthenticated = false;
+        let originalApplicationsData = [];
+
+        // UI Connection Alert Banner Control
+        const connWarning = document.getElementById('connWarning');
+
+        // Custom Modal Controller
+        const modal = document.getElementById('customModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalIconContainer = document.getElementById('modalIconContainer');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        function showModal(title, message, type = 'info') {
+            modalTitle.innerText = title;
+            modalMessage.innerText = message;
+            
+            if (type === 'success') {
+                modalIconContainer.className = "w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl bg-green-100 text-green-600";
+                modalIconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            } else if (type === 'error') {
+                modalIconContainer.className = "w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl bg-red-100 text-red-600";
+                modalIconContainer.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+            } else {
+                modalIconContainer.className = "w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl bg-amber-100 text-amber-600";
+                modalIconContainer.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+            }
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.firstElementChild.classList.remove('scale-95');
+                modal.firstElementChild.classList.add('scale-100');
+            }, 10);
+        }
+
+        modalCloseBtn.addEventListener('click', () => {
+            modal.firstElementChild.classList.remove('scale-100');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 150);
+        });
+
+        // 1. Firebase Authentication Setup (Follow Rule 3)
+        const initAuth = async () => {
+            try {
+                // 커스텀 프로젝트를 설정한 경우 외부 가상 토큰(__initial_auth_token) 충돌을 방지하기 위해 익명 로그인을 바로 수행합니다.
+                if (!isCustomProject && typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Firebase Auth failed, retrying anonymously...", error);
+                try {
+                    await signInAnonymously(auth);
+                } catch(e) {
+                    console.error("Critical Auth failure.", e);
+                }
+            }
+        };
+
+        initAuth();
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                console.log("Firebase Connection Active. User UID:", user.uid);
+                // Hide connection indicator warning upon successful authentication
+                if (connWarning) {
+                    connWarning.classList.add('hidden');
+                }
+            }
+        });
+
+        // Navigation Tab Toggles
+        const tabStudent = document.getElementById('tabStudent');
+        const tabTeacher = document.getElementById('tabTeacher');
+        const studentView = document.getElementById('studentView');
+        const teacherView = document.getElementById('teacherView');
+
+        tabStudent.addEventListener('click', () => {
+            tabStudent.className = "px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 bg-[#8C6239] text-white shadow-sm";
+            tabTeacher.className = "px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 text-[#6E5D53] hover:text-[#5C4033]";
+            
+            studentView.classList.remove('hidden');
+            teacherView.classList.add('hidden');
+        });
+
+        tabTeacher.addEventListener('click', () => {
+            tabTeacher.className = "px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 bg-[#8C6239] text-white shadow-sm";
+            tabStudent.className = "px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 text-[#6E5D53] hover:text-[#5C4033]";
+            
+            studentView.classList.add('hidden');
+            teacherView.classList.remove('hidden');
+
+            if (isTeacherAuthenticated) {
+                document.getElementById('loginGate').classList.add('hidden');
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                loadApplications();
+            } else {
+                document.getElementById('loginGate').classList.remove('hidden');
+                document.getElementById('adminDashboard').classList.add('hidden');
+            }
+        });
+
+        // Teacher Admin Authorization (Simple gateway)
+        const loginBtn = document.getElementById('loginBtn');
+        const adminPasswordInput = document.getElementById('adminPassword');
+
+        loginBtn.addEventListener('click', () => {
+            const pwd = adminPasswordInput.value;
+            if (pwd === 'admin1234') { 
+                isTeacherAuthenticated = true;
+                adminPasswordInput.value = '';
+                document.getElementById('loginGate').classList.add('hidden');
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                loadApplications();
+            } else {
+                showModal('비밀번호 불일치', '입력하신 비밀번호가 올바르지 않습니다.', 'error');
+            }
+        });
+
+        adminPasswordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') loginBtn.click();
+        });
+
+        // Admin Log out
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            isTeacherAuthenticated = false;
+            document.getElementById('loginGate').classList.remove('hidden');
+            document.getElementById('adminDashboard').classList.add('hidden');
+        });
+
+        // --- Data Interaction & Management Functions ---
+
+        // A. Load Applications from Firestore
+        async function loadApplications() {
+            if (!currentUser) return;
+            
+            const tbody = document.getElementById('applicationTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="p-8 text-center text-gray-400">
+                        <i class="fa-solid fa-spinner animate-spin text-[#8C6239] text-xl mb-2 block"></i>
+                        최신 명단을 읽어오는 중입니다...
+                    </td>
+                </tr>
+            `;
+
+            try {
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'applications');
+                const querySnapshot = await getDocs(colRef);
+                
+                const list = [];
+                querySnapshot.forEach((doc) => {
+                    list.push({ id: doc.id, ...doc.data() });
+                });
+
+                list.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+                originalApplicationsData = list;
+                
+                renderTable(originalApplicationsData);
+                updateStats(originalApplicationsData);
+
+            } catch (error) {
+                console.error("데이터 로드 실패:", error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="p-8 text-center text-red-500">
+                            <i class="fa-solid fa-triangle-exclamation text-xl mb-2 block"></i>
+                            데이터를 불러오지 못했습니다. 권한 설정 혹은 네트워크를 확인해 주세요.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // B. Render Table in DOM with search support
+        function renderTable(data) {
+            const tbody = document.getElementById('applicationTableBody');
+            if (data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="p-8 text-center text-gray-400">
+                            등록된 신청 내역이 없습니다.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            data.forEach((app) => {
+                const dateStr = app.submittedAt ? new Date(app.submittedAt).toLocaleString('ko-KR', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : '-';
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-[#FAF8F5]/60 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 font-mono font-semibold text-[#5C4033]">${app.studentId || ''}</td>
+                    <td class="p-4 font-semibold">${app.applicantName || ''}</td>
+                    <td class="p-4 text-gray-500">${app.phoneNumber || ''}</td>
+                    <td class="p-4"><span class="bg-[#EADBC8] text-[#5C4033] px-2 py-1 rounded font-medium">${app.groupName || ''}</span></td>
+                    <td class="p-4 text-gray-600">${app.leaderName || ''}</td>
+                    <td class="p-4 max-w-[150px] truncate" title="${app.bookTitle || ''}">${app.bookTitle || ''}</td>
+                    <td class="p-4 text-gray-400 text-[10px]">${dateStr}</td>
+                    <td class="p-4 text-center">
+                        <button class="delete-btn px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded transition" data-id="${app.studentId}">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+
+                tr.querySelector('.delete-btn').addEventListener('click', async (e) => {
+                    const studentIdToDelete = e.currentTarget.getAttribute('data-id');
+                    
+                    if (confirm(`학번 ${studentIdToDelete} 학생의 모임 지원서를 정말 삭제하시겠습니까?`)) {
+                        try {
+                            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'applications', studentIdToDelete);
+                            await deleteDoc(docRef);
+                            showModal('삭제 완료', `${studentIdToDelete} 신청서가 성공적으로 삭제되었습니다.`, 'success');
+                            loadApplications();
+                        } catch (err) {
+                            console.error("삭제 실패:", err);
+                            showModal('삭제 오류', '데이터 삭제에 실패했습니다. 관리자 권한을 다시 체크해 주세요.', 'error');
+                        }
+                    }
+                });
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // C. Update Dashboard Widgets
+        function updateStats(data) {
+            document.getElementById('statTotalStudents').innerText = `${data.length}명`;
+            const groups = new Set(data.map(item => item.groupName).filter(Boolean));
+            document.getElementById('statTotalGroups').innerText = `${groups.size}개`;
+        }
+
+        // D. Live Filter/Search in Table
+        const tableSearch = document.getElementById('tableSearch');
+        tableSearch.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if (!query) {
+                renderTable(originalApplicationsData);
+                return;
+            }
+
+            const filtered = originalApplicationsData.filter(item => {
+                return (item.studentId && item.studentId.includes(query)) ||
+                       (item.applicantName && item.applicantName.toLowerCase().includes(query)) ||
+                       (item.groupName && item.groupName.toLowerCase().includes(query)) ||
+                       (item.bookTitle && item.bookTitle.toLowerCase().includes(query));
+            });
+            renderTable(filtered);
+        });
+
+        // E. Manual Refresh Button
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            loadApplications();
+        });
+
+        // F. Export to Excel Compatible CSV
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            if (originalApplicationsData.length === 0) {
+                showModal('저장 불가', '내보낼 신청 데이터가 없습니다.', 'info');
+                return;
+            }
+
+            const headers = ['학번', '이름', '연락처', '조 이름', '조장 이름', '읽고 싶은 책', '선정 도서 추천 이유', '신청 일시'];
+            const csvRows = [];
+            csvRows.push(headers.join(','));
+
+            originalApplicationsData.forEach(item => {
+                const row = [
+                    `"${item.studentId || ''}"`,
+                    `"${(item.applicantName || '').replace(/"/g, '""')}"`,
+                    `"${item.phoneNumber || ''}"`,
+                    `"${(item.groupName || '').replace(/"/g, '""')}"`,
+                    `"${(item.leaderName || '').replace(/"/g, '""')}"`,
+                    `"${(item.bookTitle || '').replace(/"/g, '""')}"`,
+                    `"${(item.reason || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`,
+                    `"${item.submittedAt || ''}"`
+                ];
+                csvRows.push(row.join(','));
+            });
+
+            const csvContent = "\uFEFF" + csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            
+            const now = new Date();
+            const dateSuffix = now.toISOString().split('T')[0];
+            link.setAttribute("download", `소소한책읽기_신청자명단_${dateSuffix}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // --- Student Submit Form Process ---
+        const form = document.getElementById('applicationForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!currentUser) {
+                showModal('접속 대기', '안전한 연결을 구성 중입니다. 잠시만 대기 후 다시 시도해 주세요.', 'info');
+                return;
+            }
+
+            const groupName = document.getElementById('groupName').value.trim();
+            const leaderName = document.getElementById('leaderName').value.trim();
+            const studentId = document.getElementById('studentId').value.trim();
+            const applicantName = document.getElementById('applicantName').value.trim();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const bookTitle = document.getElementById('bookTitle').value.trim();
+            const reason = document.getElementById('reason').value.trim();
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+
+            if (!agreeTerms) {
+                showModal('동의 필요', '개인정보 수집 및 이용 동의는 필수 사항입니다.', 'info');
+                return;
+            }
+
+            const studentIdRegex = /^[0-9]{5}$/;
+            if (!studentIdRegex.test(studentId)) {
+                showModal('학번 형식 오류', '학번은 10101과 같은 5자리 숫자여야 합니다.', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> 확인 및 제출 중...';
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'applications', studentId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    showModal(
+                        '이미 신청됨', 
+                        `학번 [ ${studentId} ] 으로 이미 등록된 신청 내역이 존재합니다. 중복 신청은 불가능합니다.`, 
+                        'error'
+                    );
+                    resetSubmitButton();
+                    return;
+                }
+
+                const applicationData = {
+                    groupName,
+                    leaderName,
+                    studentId,
+                    applicantName,
+                    phoneNumber,
+                    bookTitle,
+                    reason,
+                    submittedAt: new Date().toISOString(),
+                    userUid: currentUser.uid
+                };
+
+                await setDoc(docRef, applicationData);
+
+                showModal(
+                    '신청 성공!', 
+                    `‘소소한 책읽기’ 모임 지원이 완료되었습니다!\n\n조 이름: ${groupName}\n신청자: ${applicantName} (${studentId})`, 
+                    'success'
+                );
+                
+                form.reset();
+                resetSubmitButton();
+
+            } catch (error) {
+                console.error("Error submitting application:", error);
+                showModal('제출 실패', '데이터 전송 중 오류가 발생했습니다. 네트워크 상태를 확인해 주세요.', 'error');
+                resetSubmitButton();
+            }
+        });
+
+        function resetSubmitButton() {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 신청서 제출하기';
+        }
+    </script>
+</body>
+</html>
